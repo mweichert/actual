@@ -301,6 +301,24 @@ export function deleteRule(id: RuleEntity['id']) {
   return send('api/rule-delete', id);
 }
 
+export function getTransactionsMatchingRule(ruleId: RuleEntity['id']) {
+  return send('api/rule-get-matching-transactions', { ruleId });
+}
+
+export function previewRuleOnTransactions(
+  ruleId: RuleEntity['id'],
+  transactionIds: TransactionEntity['id'][],
+) {
+  return send('api/rule-preview', { ruleId, transactionIds });
+}
+
+export function applyRuleToTransactions(
+  ruleId: RuleEntity['id'],
+  transactionIds: TransactionEntity['id'][],
+) {
+  return send('api/rule-apply-to-transactions', { ruleId, transactionIds });
+}
+
 export function holdBudgetForNextMonth(month: string, amount: number) {
   return send('api/budget-hold-for-next-month', { month, amount });
 }
