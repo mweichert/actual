@@ -564,6 +564,184 @@ describe('API CRUD operations', () => {
     expect(await api.getRules()).toHaveLength(0);
   });
 
+  // apis: getTransactionsMatchingRule, previewRuleOnTransactions, applyRuleToTransactions
+  test('Rules: get transactions matching a rule', async () => {
+    const accountId = await api.createAccount({ name: 'rule-test-account' }, 0);
+    const groceryPayee = await api.createPayee({ name: 'grocery-store' });
+    const gasPayee = await api.createPayee({ name: 'gas-station' });
+
+    // Add transactions with different payees
+    await api.addTransactions(accountId, [
+      {
+        date: '2024-01-01',
+        amount: -5000,
+        payee: groceryPayee,
+      },
+      {
+        date: '2024-01-02',
+        amount: -3000,
+        payee: groceryPayee,
+      },
+      {
+        date: '2024-01-03',
+        amount: -2000,
+        payee: gasPayee,
+      },
+    ]);
+
+    // Create a rule that matches grocery-store payee
+    const rule = await api.createRule({
+      stage: null,
+      conditionsOp: 'and',
+      conditions: [
+        {
+          field: 'payee',
+          op: 'is',
+          value: groceryPayee,
+        },
+      ],
+      actions: [
+        {
+          op: 'set',
+          field: 'notes',
+          value: 'grocery purchase',
+        },
+      ],
+    });
+
+    // Get transactions matching the rule
+    const matches = await api.getTransactionsMatchingRule(rule.id);
+
+    expect(matches).toHaveLength(2);
+    expect(matches.every(t => t.payee === groceryPayee)).toBe(true);
+  });
+
+  test('Rules: preview rule changes without applying', async () => {
+    const accountId = await api.createAccount(
+      { name: 'rule-preview-account' },
+      0,
+    );
+    const payee = await api.createPayee({ name: 'preview-payee' });
+
+    await api.addTransactions(accountId, [
+      {
+        date: '2024-01-01',
+        amount: -1000,
+        payee: payee,
+        notes: '',
+      },
+    ]);
+
+    const transactions = await api.getTransactions(
+      accountId,
+      '2024-01-01',
+      '2024-01-31',
+    );
+    const txId = transactions[0].id;
+
+    const rule = await api.createRule({
+      stage: null,
+      conditionsOp: 'and',
+      conditions: [
+        {
+          field: 'payee',
+          op: 'is',
+          value: payee,
+        },
+      ],
+      actions: [
+        {
+          op: 'set',
+          field: 'notes',
+          value: 'previewed note',
+        },
+      ],
+    });
+
+    // Preview changes
+    const preview = await api.previewRuleOnTransactions(rule.id, [txId]);
+
+    expect(preview).toHaveLength(1);
+    expect(preview[0].changes).toEqual(
+      expect.objectContaining({ notes: 'previewed note' }),
+    );
+
+    // Verify original transaction is unchanged
+    const unchanged = await api.getTransactions(
+      accountId,
+      '2024-01-01',
+      '2024-01-31',
+    );
+    expect(unchanged[0].notes).toBe('');
+  });
+
+  test('Rules: apply rule to specific transactions', async () => {
+    const accountId = await api.createAccount(
+      { name: 'rule-apply-account' },
+      0,
+    );
+    const payee = await api.createPayee({ name: 'apply-payee' });
+
+    await api.addTransactions(accountId, [
+      {
+        date: '2024-01-01',
+        amount: -1000,
+        payee: payee,
+        notes: '',
+      },
+      {
+        date: '2024-01-02',
+        amount: -2000,
+        payee: payee,
+        notes: '',
+      },
+    ]);
+
+    const transactions = await api.getTransactions(
+      accountId,
+      '2024-01-01',
+      '2024-01-31',
+    );
+
+    const rule = await api.createRule({
+      stage: null,
+      conditionsOp: 'and',
+      conditions: [
+        {
+          field: 'payee',
+          op: 'is',
+          value: payee,
+        },
+      ],
+      actions: [
+        {
+          op: 'set',
+          field: 'notes',
+          value: 'applied note',
+        },
+      ],
+    });
+
+    // Apply rule to only the first transaction
+    const result = await api.applyRuleToTransactions(rule.id, [
+      transactions[0].id,
+    ]);
+
+    expect(result.updated).toBe(1);
+
+    // Verify first transaction was updated
+    const updatedTransactions = await api.getTransactions(
+      accountId,
+      '2024-01-01',
+      '2024-01-31',
+    );
+    const first = updatedTransactions.find(t => t.id === transactions[0].id);
+    const second = updatedTransactions.find(t => t.id === transactions[1].id);
+
+    expect(first?.notes).toBe('applied note');
+    expect(second?.notes).toBe(''); // Unchanged
+  });
+
   // apis: addTransactions, getTransactions, importTransactions, updateTransaction, deleteTransaction
   test('Transactions: successfully update transactions', async () => {
     const accountId = await api.createAccount({ name: 'test-account' }, 0);

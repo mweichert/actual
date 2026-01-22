@@ -778,6 +778,90 @@ handlers['api/rule-delete'] = withMutation(async function (id) {
   return handlers['rule-delete'](id);
 });
 
+handlers['api/rule-get-matching-transactions'] = async function ({ ruleId }) {
+  checkFileOpen();
+  const rule = await handlers['rule-get']({ id: ruleId });
+  if (!rule) {
+    throw APIError('Rule not found');
+  }
+
+  const { conditionsToAQL } = await import(
+    './transactions/transaction-rules.js'
+  );
+  const { filters, errors } = conditionsToAQL(rule.conditions);
+
+  if (errors.length > 0) {
+    throw APIError('Invalid rule conditions', {
+      conditionErrors: errors,
+      actionErrors: [],
+    });
+  }
+
+  const { data } = await aqlQuery(
+    q('transactions')
+      .filter({ $and: filters })
+      .select('*'),
+  );
+  return data;
+};
+
+handlers['api/rule-preview'] = async function ({ ruleId, transactionIds }) {
+  checkFileOpen();
+  const rule = await handlers['rule-get']({ id: ruleId });
+  if (!rule) {
+    throw APIError('Rule not found');
+  }
+
+  const { Rule } = await import('./rules/rule.js');
+  const ruleInstance = new Rule(rule);
+
+  // Fetch the specified transactions
+  const { data: transactions } = await aqlQuery(
+    q('transactions')
+      .filter({ id: { $oneof: transactionIds } })
+      .select('*'),
+  );
+
+  // Preview changes for each transaction
+  const results = transactions.map(transaction => {
+    const changes = ruleInstance.exec(transaction);
+    return {
+      transaction,
+      changes: changes || {},
+    };
+  });
+
+  return results;
+};
+
+handlers['api/rule-apply-to-transactions'] = withMutation(async function ({
+  ruleId,
+  transactionIds,
+}) {
+  checkFileOpen();
+  const rule = await handlers['rule-get']({ id: ruleId });
+  if (!rule) {
+    throw APIError('Rule not found');
+  }
+
+  // Fetch the specified transactions
+  const { data: transactions } = await aqlQuery(
+    q('transactions')
+      .filter({ id: { $oneof: transactionIds } })
+      .select('*'),
+  );
+
+  // Apply the rule's actions to the transactions
+  await handlers['rule-apply-actions']({
+    transactions,
+    actions: rule.actions,
+  });
+
+  // Return count of transactions that were processed
+  // (batchUpdateTransactions's 'updated' return only includes transfer updates)
+  return { updated: transactions.length };
+});
+
 handlers['api/schedules-get'] = async function () {
   checkFileOpen();
   const { data } = await aqlQuery(q('schedules').select('*'));
