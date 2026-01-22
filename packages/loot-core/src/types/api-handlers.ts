@@ -229,6 +229,22 @@ export type ApiHandlers = {
 
   'api/rule-delete': (id: RuleEntity['id']) => Promise<boolean>;
 
+  'api/rule-get-matching-transactions': (arg: {
+    ruleId: RuleEntity['id'];
+  }) => Promise<TransactionEntity[]>;
+
+  'api/rule-preview': (arg: {
+    ruleId: RuleEntity['id'];
+    transactionIds: TransactionEntity['id'][];
+  }) => Promise<
+    Array<{ transaction: TransactionEntity; changes: Partial<TransactionEntity> }>
+  >;
+
+  'api/rule-apply-to-transactions': (arg: {
+    ruleId: RuleEntity['id'];
+    transactionIds: TransactionEntity['id'][];
+  }) => Promise<{ updated: number }>;
+
   'api/schedule-create': (
     schedule: Omit<APIScheduleEntity, 'id'>,
   ) => Promise<ScheduleEntity['id']>;
