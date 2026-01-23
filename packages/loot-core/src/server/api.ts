@@ -746,6 +746,11 @@ handlers['api/rules-get'] = async function () {
   return handlers['rules-get']();
 };
 
+handlers['api/rule-get'] = async function ({ id }) {
+  checkFileOpen();
+  return handlers['rule-get']({ id });
+};
+
 handlers['api/payee-rules-get'] = async function ({ id }) {
   checkFileOpen();
   return handlers['payees-get-rules']({ id });

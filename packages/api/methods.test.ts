@@ -742,6 +742,41 @@ describe('API CRUD operations', () => {
     expect(second?.notes).toBe(''); // Unchanged
   });
 
+  // apis: getRule
+  test('Rules: getRule returns single rule by ID', async () => {
+    await api.createPayee({ name: 'test-payee' });
+
+    const rule = await api.createRule({
+      stage: 'pre',
+      conditionsOp: 'and',
+      conditions: [
+        {
+          field: 'payee',
+          op: 'is',
+          value: 'test-payee',
+        },
+      ],
+      actions: [
+        {
+          op: 'set',
+          field: 'category',
+          value: 'fc3825fd-b982-4b72-b768-5b30844cf832',
+        },
+      ],
+    });
+
+    // Test fetching existing rule
+    const fetchedRule = await api.getRule(rule.id);
+    expect(fetchedRule).not.toBeNull();
+    expect(fetchedRule?.id).toBe(rule.id);
+    expect(fetchedRule?.stage).toBe('pre');
+    expect(fetchedRule?.conditionsOp).toBe('and');
+
+    // Test fetching non-existent rule returns null
+    const nonExistent = await api.getRule('non-existent-id');
+    expect(nonExistent).toBeNull();
+  });
+
   // apis: addTransactions, getTransactions, importTransactions, updateTransaction, deleteTransaction
   test('Transactions: successfully update transactions', async () => {
     const accountId = await api.createAccount({ name: 'test-account' }, 0);

@@ -219,6 +219,8 @@ export type ApiHandlers = {
 
   'api/rules-get': () => Promise<RuleEntity[]>;
 
+  'api/rule-get': (arg: { id: RuleEntity['id'] }) => Promise<RuleEntity | null>;
+
   'api/payee-rules-get': (arg: {
     id: APIPayeeEntity['id'];
   }) => Promise<RuleEntity[]>;
