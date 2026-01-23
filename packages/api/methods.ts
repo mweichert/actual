@@ -285,6 +285,10 @@ export function getRules() {
   return send('api/rules-get');
 }
 
+export function getRule(id: RuleEntity['id']) {
+  return send('api/rule-get', { id });
+}
+
 export function getPayeeRules(id: RuleEntity['id']) {
   return send('api/payee-rules-get', { id });
 }
