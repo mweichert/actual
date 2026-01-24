@@ -26,6 +26,7 @@ __metadata:
     "@actual-app/crdt": "workspace:^"
     better-sqlite3: "npm:^12.5.0"
     compare-versions: "npm:^6.1.1"
+    i18next: "npm:^25.2.1"
     node-fetch: "npm:^3.3.2"
     tsc-alias: "npm:^1.8.16"
     typescript: "npm:^5.9.3"
@@ -16869,6 +16870,20 @@ __metadata:
     typescript:
       optional: true
   checksum: 10/6c73d964f2a98b1aa2c2717fe6da66fc265bcbbc5fcd52b2bfff51ff013d30d4f7d7449c4eb7f464d27af43e2e73f2e7f1d46a144d731bd3bdb1385d4c199e4c
+  languageName: node
+  linkType: hard
+
+"i18next@npm:^25.2.1":
+  version: 25.8.0
+  resolution: "i18next@npm:25.8.0"
+  dependencies:
+    "@babel/runtime": "npm:^7.28.4"
+  peerDependencies:
+    typescript: ^5
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+  checksum: 10/d24a6e8e8e53f339f473f27eb3bed6a6cdcc6357bde3c5abe5aa0221f19030a077ffdb115e64ba5c665eb833a95d430b0a40fff67451da38a7c20d3c0fc831fe
   languageName: node
   linkType: hard
 
