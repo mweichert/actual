@@ -1,0 +1,35 @@
+name: Publish API Package
+
+on:
+  push:
+    tags:
+      - '*-fork*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    name: Build and publish API package to GitHub Release
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up environment
+        uses: ./.github/actions/setup
+        with:
+          download-translations: 'false'
+
+      - name: Build API package
+        run: yarn workspace @actual-app/api build
+
+      - name: Pack API package
+        run: |
+          cd packages/api
+          yarn pack --filename actual-app-api.tgz
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: packages/api/actual-app-api.tgz
+          generate_release_notes: true
