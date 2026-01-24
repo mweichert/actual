@@ -1,3 +1,6 @@
+// Initialize i18next FIRST, before any imports that use t()
+import './i18n';
+
 import type {
   RequestInfo as FetchInfo,
   RequestInit as FetchInit,
