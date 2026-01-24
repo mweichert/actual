@@ -1,3 +1,15 @@
+// Initialize i18next for API consumers (gets bundled into bundle.api.js)
+// This must be first so t() calls return the English keys instead of empty strings
+import i18n from 'i18next';
+
+i18n.init({
+  lng: 'en',
+  nsSeparator: false,
+  keySeparator: false,
+  fallbackLng: false,
+  interpolation: { escapeValue: false },
+});
+
 // Polyfills for browser/web worker environment
 import * as jspb from 'google-protobuf';
 
