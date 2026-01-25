@@ -26,9 +26,12 @@ jobs:
       - name: Set API package version from tag
         run: |
           cd packages/api
-          # Update version to match fork tag (e.g., 0.0.1-fork.10)
-          npm version "${{ github.ref_name }}" --no-git-tag-version --allow-same-version
+          # Update version to match fork tag (e.g., 0.0.1-fork.11)
+          # Use jq instead of npm version to avoid Yarn patch compatibility issues
+          jq --arg v "${{ github.ref_name }}" '.version = $v' package.json > package.json.tmp
+          mv package.json.tmp package.json
           echo "Updated @actual-app/api version to ${{ github.ref_name }}"
+          cat package.json | grep '"version"'
 
       - name: Pack API package
         run: |
