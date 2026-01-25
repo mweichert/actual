@@ -121,7 +121,7 @@ export function getSyncError(
       { id },
     );
   } else {
-    return t('We had an unknown problem opening "{{id}}".', { id });
+    return t('We had an unknown problem opening "{{id}}" (reason: {{reason}}).', { id, reason: reason || 'unknown' });
   }
 }
 
