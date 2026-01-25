@@ -130,7 +130,7 @@ export function getSyncError(
       'Failed to sync because your device time differs too much from the server. Please check your device time settings and ensure they are correct.',
     );
   } else {
-    return t('We had an unknown problem opening "{{id}}".', { id });
+    return t('We had an unknown problem opening "{{id}}" (reason: {{reason}}).', { id, reason: reason || 'unknown' });
   }
 }
 
