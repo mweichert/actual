@@ -616,6 +616,52 @@ describe('API CRUD operations', () => {
     expect(matches.every(t => t.payee === groceryPayee)).toBe(true);
   });
 
+  test('Rules: get transactions matching a rule with oneOf condition', async () => {
+    const accountId = await api.createAccount(
+      { name: 'oneOf-test-account' },
+      0,
+    );
+    const payee1 = await api.createPayee({ name: 'store-one' });
+    const payee2 = await api.createPayee({ name: 'store-two' });
+    const payee3 = await api.createPayee({ name: 'store-three' });
+
+    // Add transactions with different payees
+    await api.addTransactions(accountId, [
+      { date: '2024-01-01', amount: -1000, payee: payee1 },
+      { date: '2024-01-02', amount: -2000, payee: payee2 },
+      { date: '2024-01-03', amount: -3000, payee: payee3 },
+    ]);
+
+    // Create rule matching payee1 OR payee2 (not payee3)
+    const rule = await api.createRule({
+      stage: null,
+      conditionsOp: 'and',
+      conditions: [
+        {
+          field: 'payee',
+          op: 'oneOf',
+          value: [payee1, payee2],
+        },
+      ],
+      actions: [
+        {
+          op: 'set',
+          field: 'notes',
+          value: 'matched by oneOf',
+        },
+      ],
+    });
+
+    // Get transactions matching the rule
+    const matches = await api.getTransactionsMatchingRule(rule.id);
+
+    expect(matches).toHaveLength(2);
+    expect(
+      matches.every(t => t.payee === payee1 || t.payee === payee2),
+    ).toBe(true);
+    expect(matches.some(t => t.payee === payee3)).toBe(false);
+  });
+
   test('Rules: preview rule changes without applying', async () => {
     const accountId = await api.createAccount(
       { name: 'rule-preview-account' },

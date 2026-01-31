@@ -1032,5 +1032,17 @@ export async function finalizeTransactionForRules(
     delete trans.balance;
   }
 
+  if ('_account' in trans) {
+    delete trans._account;
+  }
+
+  if ('_account_name' in trans) {
+    delete trans._account_name;
+  }
+
+  if ('_category_name' in trans) {
+    delete trans._category_name;
+  }
+
   return trans;
 }

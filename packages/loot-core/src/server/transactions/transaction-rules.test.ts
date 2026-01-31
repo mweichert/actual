@@ -507,6 +507,18 @@ describe('Transaction rules', () => {
     ]);
     expect(transactions.map(t => t.id)).toEqual(['5', '1']);
 
+    // oneOf with payee IDs
+    transactions = await getMatchingTransactions([
+      { field: 'payee', op: 'oneOf', value: [krogerId, lowesId] },
+    ]);
+    expect(transactions.map(t => t.id).sort()).toEqual(['1', '2', '3', '4', '5']);
+
+    // oneOf with single payee ID
+    transactions = await getMatchingTransactions([
+      { field: 'payee', op: 'oneOf', value: [krogerId] },
+    ]);
+    expect(transactions.map(t => t.id).sort()).toEqual(['1', '2']);
+
     // todo: isapprox
   });
 
