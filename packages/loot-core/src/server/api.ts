@@ -857,13 +857,20 @@ handlers['api/rule-apply-to-transactions'] = withMutation(async function ({
   );
 
   // Apply the rule's actions to the transactions
-  await handlers['rule-apply-actions']({
+  const result = await handlers['rule-apply-actions']({
     transactions,
     actions: rule.actions,
   });
 
+  // rule-apply-actions returns null if action parsing failed
+  if (result === null) {
+    return { updated: 0 };
+  }
+
   // Return count of transactions that were processed
-  // (batchUpdateTransactions's 'updated' return only includes transfer updates)
+  // Note: result.updated only contains transfer-related updates from batchUpdateTransactions,
+  // not the actual count of updated transactions. We use the input count since all
+  // fetched transactions are processed when rule-apply-actions succeeds.
   return { updated: transactions.length };
 });
 
