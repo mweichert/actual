@@ -662,6 +662,44 @@ describe('API CRUD operations', () => {
     expect(matches.some(t => t.payee === payee3)).toBe(false);
   });
 
+  test('Rules: get transactions matching a rule with OR conditionsOp', async () => {
+    const accountId = await api.createAccount(
+      { name: 'or-conditionsop-test-account' },
+      0,
+    );
+    const payee1 = await api.createPayee({ name: 'or-payee-one' });
+    const payee2 = await api.createPayee({ name: 'or-payee-two' });
+    const payee3 = await api.createPayee({ name: 'or-payee-three' });
+
+    await api.addTransactions(accountId, [
+      { date: '2024-01-01', amount: -1000, payee: payee1 }, // matches payee1 condition
+      { date: '2024-01-02', amount: -2000, payee: payee2 }, // matches payee2 condition
+      { date: '2024-01-03', amount: -3000, payee: payee3 }, // matches neither
+    ]);
+
+    // Create rule with OR: payee is payee1 OR payee is payee2
+    // With AND this would match nothing; with OR it should match payee1 and payee2
+    const rule = await api.createRule({
+      stage: null,
+      conditionsOp: 'or',
+      conditions: [
+        { field: 'payee', op: 'is', value: payee1 },
+        { field: 'payee', op: 'is', value: payee2 },
+      ],
+      actions: [{ op: 'set', field: 'notes', value: 'matched by OR' }],
+    });
+
+    // Get transactions matching the rule
+    // With OR, should match: payee1 transaction AND payee2 transaction
+    const matches = await api.getTransactionsMatchingRule(rule.id);
+
+    expect(matches).toHaveLength(2);
+    const payees = matches.map(t => t.payee);
+    expect(payees).toContain(payee1);
+    expect(payees).toContain(payee2);
+    expect(payees).not.toContain(payee3);
+  });
+
   test('Rules: preview rule changes without applying', async () => {
     const accountId = await api.createAccount(
       { name: 'rule-preview-account' },

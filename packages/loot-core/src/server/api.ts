@@ -804,7 +804,7 @@ handlers['api/rule-get-matching-transactions'] = async function ({ ruleId }) {
 
   const { data } = await aqlQuery(
     q('transactions')
-      .filter({ $and: filters })
+      .filter(rule.conditionsOp === 'or' ? { $or: filters } : { $and: filters })
       .select('*'),
   );
   return data;
